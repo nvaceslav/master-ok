@@ -3,8 +3,8 @@ FROM node:18-alpine as build-stage
 
 WORKDIR /app
 
-# Копируем package.json и package-lock.json
-COPY app/frontend/package.json frontend/package-lock.json ./
+# Копируем package.json и package-lock.json ИЗ app/frontend/
+COPY app/frontend/package.json app/frontend/package-lock.json ./
 
 # Устанавливаем зависимости
 RUN npm install
@@ -30,8 +30,8 @@ RUN apt-get update && apt-get install -y \
 # Устанавливаем Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# Копируем бэкенд Laravel
-COPY backend/ .
+# Копируем бэкенд Laravel ИЗ app/backend/
+COPY app/backend/ .
 
 # Копируем собранный фронтенд в папку public
 COPY --from=build-stage /app/build/ public/
