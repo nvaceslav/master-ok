@@ -27,7 +27,11 @@ RUN echo "BROADCAST_DRIVER=log" >> .env
 
 RUN composer install --no-dev --optimize-autoloader
 
+# ФИКС APACHE MPM
+RUN a2dismod mpm_event mpm_worker
+RUN a2enmod mpm_prefork
 RUN a2enmod rewrite
+
 RUN chown -R www-data:www-data /var/www/html \
     && chmod -R 775 /var/www/html/storage \
     && chmod -R 775 /var/www/html/bootstrap/cache
