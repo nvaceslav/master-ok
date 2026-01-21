@@ -4,7 +4,7 @@ FROM node:18-alpine as build-stage
 WORKDIR /app
 
 # Копируем package.json и package-lock.json
-COPY frontend/package.json frontend/package-lock.json ./
+COPY app/frontend/package.json frontend/package-lock.json ./
 
 # Устанавливаем зависимости
 RUN npm install
