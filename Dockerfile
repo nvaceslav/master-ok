@@ -1,15 +1,19 @@
 # Этап 1: Сборка фронтенда
 FROM node:18-alpine as build-stage
 
-# Создаем директорию и копируем package.json из правильного места
 WORKDIR /app
+
+# Копируем package.json
 COPY app/frontend/package*.json ./
 
-# Устанавливаем зависимости
-RUN npm ci --only=production
+# Устанавливаем ВСЕ зависимости (включая dev)
+RUN npm ci
 
 # Копируем исходники
 COPY app/frontend/ ./
+
+# Устанавливаем @types/jest для исправления ошибки
+RUN npm install --save-dev @types/jest
 
 # Запускаем сборку
 RUN npm run build
@@ -17,13 +21,10 @@ RUN npm run build
 # Этап 2: Nginx
 FROM nginx:alpine
 
-# Копируем собранный фронтенд
-# ПРОВЕРЬТЕ: какая папка создается при сборке? build/ или dist/?
+# Копируем собранный фронтенд (React создает папку build)
 COPY --from=build-stage /app/build /usr/share/nginx/html
-# ИЛИ если создается dist:
-# COPY --from=build-stage /app/dist /usr/share/nginx/html
 
-# Простой конфиг nginx
+# Конфиг nginx
 RUN echo 'server { \
     listen 80; \
     root /usr/share/nginx/html; \
