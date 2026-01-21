@@ -1,0 +1,11 @@
+.git
+.gitignore
+README.md
+node_modules
+vendor
+*.log
+.env
+.DS_Store
+app/frontend/node_modules
+app/backend/vendor
+app/backend/storage/logs/*
