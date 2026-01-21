@@ -6,35 +6,32 @@ RUN npm install
 COPY app/frontend/ ./
 RUN npm run build
 
-# Этап 2: Бэкенд + фронтенд
-FROM php:8.2-apache
-WORKDIR /var/www/html
+# Этап 2: Используем Nginx вместо Apache (проще!)
+FROM nginx:alpine
 
-RUN apt-get update && apt-get install -y \
-    libzip-dev zip unzip \
-    && docker-php-ext-install zip pdo pdo_mysql
+# Копируем собранный фронтенд
+COPY --from=build-stage /app/build/ /usr/share/nginx/html
 
-COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
-COPY app/backend/ .
-COPY --from=build-stage /app/build/ public/
+# Копируем Laravel бэкенд (будет на другом порту)
+COPY app/backend/ /var/www/backend/
 
-# УДАЛЯЕМ ВСЕ PUSHER НАСТРОЙКИ!
-RUN if [ -f .env ]; then \
-    sed -i '/PUSHER_/d' .env; \
-    sed -i '/BROADCAST_DRIVER=/d' .env; \
-    fi
-RUN echo "BROADCAST_DRIVER=log" >> .env
-
-RUN composer install --no-dev --optimize-autoloader
-
-# ФИКС APACHE MPM
-RUN a2dismod mpm_event mpm_worker
-RUN a2enmod mpm_prefork
-RUN a2enmod rewrite
-
-RUN chown -R www-data:www-data /var/www/html \
-    && chmod -R 775 /var/www/html/storage \
-    && chmod -R 775 /var/www/html/bootstrap/cache
+# Настройка Nginx для SPA
+RUN echo 'server {\n\
+    listen 80;\n\
+    server_name localhost;\n\
+    root /usr/share/nginx/html;\n\
+    index index.html;\n\
+    \n\
+    location / {\n\
+        try_files $uri $uri/ /index.html;\n\
+    }\n\
+    \n\
+    location /api {\n\
+        proxy_pass http://localhost:8000;\n\
+        proxy_set_header Host $host;\n\
+        proxy_set_header X-Real-IP $remote_addr;\n\
+    }\n\
+}' > /etc/nginx/conf.d/default.conf
 
 EXPOSE 80
-CMD ["apache2-foreground"]
+CMD ["nginx", "-g", "daemon off;"]
