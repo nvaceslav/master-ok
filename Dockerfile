@@ -1,61 +1,56 @@
 # Этап 1: Сборка фронтенда
 FROM node:18-alpine as build-stage
+
+# Создаём рабочую директорию
 WORKDIR /app
-COPY frontend/package*.json ./
-RUN ls -la  # для отладки
-RUN npm install
-COPY frontend/ ./
+
+# Копируем package.json и package-lock.json
+COPY ./frontend/package.json ./frontend/package-lock.json ./
+
+# Устанавливаем зависимости
+RUN npm install --silent
+
+# Копируем остальные файлы фронтенда
+COPY ./frontend/ ./
+
+# Собираем проект
 RUN npm run build
 
 # Этап 2: Бэкенд + фронтенд
 FROM php:8.2-apache
+
+# Устанавливаем рабочую директорию
 WORKDIR /var/www/html
 
-# Устанавливаем зависимости PHP
+# Устанавливаем минимальные зависимости PHP
 RUN apt-get update && apt-get install -y \
     libzip-dev \
     zip \
     unzip \
-    libpng-dev \
-    libjpeg-dev \
-    libfreetype6-dev \
-    && docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install zip pdo pdo_mysql gd
+    && docker-php-ext-install zip pdo pdo_mysql
 
 # Устанавливаем Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# Копируем бэкенд
-COPY backend/ .
+# Копируем бэкенд Laravel
+COPY ./backend/ .
 
-# Копируем собранный фронтенд в public
-COPY --from=build-stage /app/build/ public/
+# Копируем собранный фронтенд в папку public
+COPY --from=build-stage /app/build/ ./public/
 
 # Устанавливаем зависимости Laravel
-RUN composer install --no-dev --optimize-autoloader \
-    && php artisan config:cache \
-    && php artisan route:cache \
-    && php artisan view:cache
+RUN composer install --no-dev --no-scripts --optimize-autoloader
 
-# Настройка Apache для SPA
-RUN echo '<VirtualHost *:80>\n\
-    DocumentRoot /var/www/html/public\n\
-    <Directory /var/www/html/public>\n\
-        AllowOverride All\n\
-        Require all granted\n\
-        FallbackResource /index.php\n\
-    </Directory>\n\
-</VirtualHost>' > /etc/apache2/sites-available/000-default.conf
-
+# Настраиваем Apache
 RUN a2enmod rewrite
 
-# Настройка прав
+# Настраиваем права
 RUN chown -R www-data:www-data /var/www/html \
     && chmod -R 775 /var/www/html/storage \
     && chmod -R 775 /var/www/html/bootstrap/cache
 
-# Создаём .env если нет
-RUN if [ ! -f .env ]; then cp .env.example .env; fi
-
+# Порт
 EXPOSE 80
+
+# Команда запуска
 CMD ["apache2-foreground"]
