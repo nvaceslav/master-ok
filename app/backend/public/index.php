@@ -1,22 +1,32 @@
-<?php
-\$uri = \$_SERVER['REQUEST_URI'];
+cd D:\master-ok\app\backend\public
 
-// Если API - Laravel
-if (strpos(\$uri, '/api/') === 0) {
-    require __DIR__.'/../vendor/autoload.php';
-    \$app = require_once __DIR__.'/../bootstrap/app.php';
-    \$app->make(Illuminate\Contracts\Http\Kernel::class)
-        ->handle(Illuminate\Http\Request::capture());
-} else {
-    // Если файл существует - отдай его
-    \$file = __DIR__ . \$uri;
-    if (file_exists(\$file) && \$uri !== '/') {
-        \$mime = mime_content_type(\$file) ?: 'text/plain';
-        header('Content-Type: ' . \$mime);
-        readfile(\$file);
-    } else {
-        // Иначе - React SPA
-        readfile(__DIR__.'/index.html');
-    }
+# Удали наш index.php
+Remove-Item index.php -Force
+
+# Верни оригинальный Laravel index.php
+@"
+<?php
+
+use Illuminate\Contracts\Http\Kernel;
+use Illuminate\Http\Request;
+
+define('LARAVEL_START', microtime(true));
+
+if (file_exists(\$maintenance = __DIR__.'/../storage/framework/maintenance.php')) {
+    require \$maintenance;
 }
+
+require __DIR__.'/../vendor/autoload.php';
+
+\$app = require_once __DIR__.'/../bootstrap/app.php';
+
+\$kernel = \$app->make(Kernel::class);
+
+\$response = \$kernel->handle(
+    \$request = Request::capture()
+);
+
+\$response->send();
+
+\$kernel->terminate(\$request, \$response);
 "@ | Out-File -FilePath "index.php" -Encoding UTF8

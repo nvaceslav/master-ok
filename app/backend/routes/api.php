@@ -20,23 +20,20 @@ Route::prefix('auth')->group(function () {
     Route::post('/verify-login', [AuthController::class, 'verifyLogin']);
     Route::post('/verify-register', [AuthController::class, 'verifyRegister']);
     
-    // =========== НОВЫЕ МАРШРУТЫ ДЛЯ ФРОНТЕНДА ===========
-    // То же самое, но с другим URL (что ожидает фронтенд)
-    Route::post('/login/send-code', [AuthController::class, 'sendLoginCode']);
-    Route::post('/login/verify', [AuthController::class, 'verifyLogin']);
+    // =========== МАРШРУТЫ ИЗ WEB.PHP ===========
     Route::post('/register/send-code', [AuthController::class, 'sendRegisterCode']);
     Route::post('/register/verify', [AuthController::class, 'verifyRegister']);
+    Route::post('/login/send-code', [AuthController::class, 'sendLoginCode']);
+    Route::post('/login/verify', [AuthController::class, 'verifyLogin']);
+    Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
+    Route::get('/me', [AuthController::class, 'getMe'])->middleware('auth:sanctum');
     
     // =========== ДОПОЛНИТЕЛЬНЫЕ МЕТОДЫ ИЗ AuthController ===========
-    // У тебя есть эти методы в AuthController - подключим их тоже
     Route::post('/register/send-code-alt', [AuthController::class, 'sendRegistrationCode']);
     Route::post('/register/verify-alt', [AuthController::class, 'verifyRegistration']);
     
     // Повторная отправка кода
     Route::post('/resend-code', [AuthController::class, 'resendCode']);
-    
-    // Выход
-    Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
 });
 
 // ПУБЛИЧНЫЕ МАРШРУТЫ
@@ -69,44 +66,39 @@ Route::get('/masters', function (Request $request) {
 
 // ЗАЩИЩЕННЫЕ МАРШРУТЫ (требуют авторизации)
 Route::middleware('auth:sanctum')->group(function () {
-    // Профиль пользователя
-    Route::get('/auth/me', [AuthController::class, 'me']);
+    // Профиль пользователя (маршруты из web.php и api.php)
+    Route::get('/auth/me', [AuthController::class, 'getMe']);
     Route::put('/profile', [ProfileController::class, 'update']);
+    Route::post('/profile/upload-avatar', [ProfileController::class, 'uploadAvatar']);
+    Route::delete('/profile/avatar', [ProfileController::class, 'deleteAvatar']);
+    
+    // Дополнительные маршруты профиля из api.php
     Route::post('/profile/avatar', [ProfileController::class, 'updateAvatar']);
+    Route::get('/auth/me', [AuthController::class, 'me']);
     
-    // Заявки
-    Route::prefix('requests')->group(function () {
-        Route::get('/', [RequestController::class, 'index']);
-        Route::post('/', [RequestController::class, 'store']);
-        Route::get('/statistics', [RequestController::class, 'statistics']);
-        Route::get('/{id}', [RequestController::class, 'show']);
-        Route::put('/{id}', [RequestController::class, 'update']);
-        Route::delete('/{id}', [RequestController::class, 'destroy']);
-        
-        // Действия с заявками
-        Route::post('/{id}/respond', [RequestController::class, 'respond']);
-        Route::post('/{id}/select-master', [RequestController::class, 'selectMaster']);
-        Route::post('/{id}/complete', [RequestController::class, 'complete']);
-        Route::post('/{id}/cancel', [RequestController::class, 'cancel']);
-        
-        // Фото
-        Route::post('/{id}/photos', [RequestController::class, 'uploadPhotos']);
-        Route::delete('/{id}/photos/{photoIndex}', [RequestController::class, 'deletePhoto']);
-    });
+    // Заявки (маршруты из web.php)
+    Route::apiResource('requests', RequestController::class);
+    Route::post('/requests/{id}/respond', [RequestController::class, 'respond']);
+    Route::post('/requests/{id}/select-master', [RequestController::class, 'selectMaster']);
+    Route::post('/requests/{id}/complete', [RequestController::class, 'complete']);
+    Route::post('/requests/{id}/photos', [RequestController::class, 'uploadPhotos']);
     
-    // Чаты
-    Route::prefix('chats')->group(function () {
-        Route::get('/', [ChatController::class, 'index']);
-        Route::get('/unread-count', [ChatController::class, 'unreadCount']);
-        Route::get('/{id}', [ChatController::class, 'show']);
-        Route::post('/{id}/close', [ChatController::class, 'closeChat']);
-        
-        // Сообщения
-        Route::post('/{id}/messages', [ChatController::class, 'sendMessage']);
-        Route::delete('/{chatId}/messages/{messageId}', [ChatController::class, 'deleteMessage']);
-    });
+    // Дополнительные маршруты заявок из api.php
+    Route::get('/requests/statistics', [RequestController::class, 'statistics']);
+    Route::post('/requests/{id}/cancel', [RequestController::class, 'cancel']);
+    Route::delete('/requests/{id}/photos/{photoIndex}', [RequestController::class, 'deletePhoto']);
     
-    // Отзывы
+    // Чаты (маршруты из web.php)
+    Route::get('/chats', [ChatController::class, 'index']);
+    Route::get('/chats/{id}', [ChatController::class, 'show']);
+    Route::post('/chats/{id}/messages', [ChatController::class, 'sendMessage']);
+    Route::get('/chats/unread-count', [ChatController::class, 'unreadCount']);
+    
+    // Дополнительные маршруты чатов из api.php
+    Route::post('/chats/{id}/close', [ChatController::class, 'closeChat']);
+    Route::delete('/chats/{chatId}/messages/{messageId}', [ChatController::class, 'deleteMessage']);
+    
+    // Отзывы (только из api.php)
     Route::prefix('reviews')->group(function () {
         Route::get('/', [ReviewController::class, 'index']);
         Route::post('/', [ReviewController::class, 'store']);
@@ -114,7 +106,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('/{id}', [ReviewController::class, 'destroy']);
     });
     
-    // Уведомления
+    // Уведомления (только из api.php)
     Route::prefix('notifications')->group(function () {
         Route::get('/', [NotificationController::class, 'index']);
         Route::post('/{id}/read', [NotificationController::class, 'markAsRead']);
