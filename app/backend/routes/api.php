@@ -64,7 +64,7 @@ Route::get('/masters', function (Request $request) {
     ]);
 });
 
-Route::get('/reviews/master/{masterId}', [ReviewController::class, 'index']);
+// Route::get('/reviews/master/{masterId}', [ReviewController::class, 'index']);
 
 // ЗАЩИЩЕННЫЕ МАРШРУТЫ (требуют авторизации)
 Route::middleware('auth:sanctum')->group(function () {
