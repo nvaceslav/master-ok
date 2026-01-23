@@ -9,6 +9,9 @@ use App\Http\Controllers\Api\ChatController;
 use App\Http\Controllers\Api\ReviewController;
 use App\Http\Controllers\Api\NotificationController;
 
+// ============ ВАЖНО: ОТКЛЮЧАЕМ CSRF ДЛЯ ВСЕГО API ============
+Route::middleware(['api'])->group(function () {
+    
 // ПУБЛИЧНЫЕ МАРШРУТЫ АУТЕНТИФИКАЦИИ (без авторизации)
 Route::prefix('auth')->group(function () {
     // =========== СУЩЕСТВУЮЩИЕ МАРШРУТЫ (для совместимости) ===========
@@ -64,8 +67,6 @@ Route::get('/masters', function (Request $request) {
     ]);
 });
 
-// Route::get('/reviews/master/{masterId}', [ReviewController::class, 'index']);
-
 // ЗАЩИЩЕННЫЕ МАРШРУТЫ (требуют авторизации)
 Route::middleware('auth:sanctum')->group(function () {
     // Профиль пользователя
@@ -103,12 +104,6 @@ Route::middleware('auth:sanctum')->group(function () {
         // Сообщения
         Route::post('/{id}/messages', [ChatController::class, 'sendMessage']);
         Route::delete('/{chatId}/messages/{messageId}', [ChatController::class, 'deleteMessage']);
-    });
-
-    // Тестовое событие
-    Route::post('/test-broadcast', function () {
-        broadcast(new \App\Events\TestEvent('Тестовое сообщение с сервера!'));
-        return response()->json(['success' => true]);
     });
     
     // Отзывы
@@ -150,3 +145,5 @@ Route::fallback(function () {
         'message' => 'API маршрут не найден'
     ], 404);
 });
+
+}); // ← ЗАКРЫВАЕМ middleware group
