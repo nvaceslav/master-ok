@@ -1,60 +1,22 @@
 <?php
-// backend/public/index.php
+\$uri = \$_SERVER['REQUEST_URI'];
 
-use Illuminate\Contracts\Http\Kernel;
-use Illuminate\Http\Request;
-
-define('LARAVEL_START', microtime(true));
-
-$uri = $_SERVER['REQUEST_URI'];
-
-// Если это статический файл (CSS, JS, изображения, manifest.json) - отдаем как есть
-if (preg_match('/\.(css|js|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot|json|webmanifest)$/', $uri) || 
-    $uri === '/manifest.json') {
-    
-    $file = __DIR__ . $uri;
-    if (file_exists($file)) {
-        $mime_types = [
-            'css' => 'text/css',
-            'js' => 'application/javascript',
-            'png' => 'image/png',
-            'jpg' => 'image/jpeg',
-            'jpeg' => 'image/jpeg',
-            'gif' => 'image/gif',
-            'ico' => 'image/x-icon',
-            'svg' => 'image/svg+xml',
-            'woff' => 'font/woff',
-            'woff2' => 'font/woff2',
-            'ttf' => 'font/ttf',
-            'eot' => 'application/vnd.ms-fontobject',
-            'json' => 'application/json',
-            'webmanifest' => 'application/manifest+json',
-        ];
-        
-        $ext = pathinfo($file, PATHINFO_EXTENSION);
-        if (isset($mime_types[$ext])) {
-            header('Content-Type: ' . $mime_types[$ext]);
-        } elseif ($uri === '/manifest.json') {
-            header('Content-Type: application/manifest+json');
-        }
-        
-        readfile($file);
-        exit;
+// Если API - Laravel
+if (strpos(\$uri, '/api/') === 0) {
+    require __DIR__.'/../vendor/autoload.php';
+    \$app = require_once __DIR__.'/../bootstrap/app.php';
+    \$app->make(Illuminate\Contracts\Http\Kernel::class)
+        ->handle(Illuminate\Http\Request::capture());
+} else {
+    // Если файл существует - отдай его
+    \$file = __DIR__ . \$uri;
+    if (file_exists(\$file) && \$uri !== '/') {
+        \$mime = mime_content_type(\$file) ?: 'text/plain';
+        header('Content-Type: ' . \$mime);
+        readfile(\$file);
+    } else {
+        // Иначе - React SPA
+        readfile(__DIR__.'/index.html');
     }
 }
-
-// Если это API запрос - обрабатываем через Laravel
-if (strpos($uri, '/api/') === 0 || strpos($uri, '/broadcasting/') === 0 || 
-    strpos($uri, '/sanctum/') === 0 || strpos($uri, '/vendor/') === 0) {
-    
-    require __DIR__.'/../vendor/autoload.php';
-    $app = require_once __DIR__.'/../bootstrap/app.php';
-    $kernel = $app->make(Kernel::class);
-    $response = $kernel->handle($request = Request::capture());
-    $response->send();
-    $kernel->terminate($request, $response);
-    
-} else {
-    // Для всех остальных маршрутов отдаём React SPA
-    readfile(__DIR__.'/index.html');
-}
+"@ | Out-File -FilePath "index.php" -Encoding UTF8
