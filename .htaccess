@@ -1,0 +1,3 @@
+RewriteEngine On
+RewriteRule ^api/(.*)$ backend/public/index.php [L]
+RewriteRule ^(.*)$ frontend/build/$1 [L]
