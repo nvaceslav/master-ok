@@ -8,8 +8,10 @@ define('LARAVEL_START', microtime(true));
 
 $uri = $_SERVER['REQUEST_URI'];
 
-// Если это статический файл (CSS, JS, изображения) - отдаем как есть
-if (preg_match('/\.(css|js|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$/', $uri)) {
+// Если это статический файл (CSS, JS, изображения, manifest.json) - отдаем как есть
+if (preg_match('/\.(css|js|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot|json|webmanifest)$/', $uri) || 
+    $uri === '/manifest.json') {
+    
     $file = __DIR__ . $uri;
     if (file_exists($file)) {
         $mime_types = [
@@ -25,11 +27,15 @@ if (preg_match('/\.(css|js|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$/', $uri
             'woff2' => 'font/woff2',
             'ttf' => 'font/ttf',
             'eot' => 'application/vnd.ms-fontobject',
+            'json' => 'application/json',
+            'webmanifest' => 'application/manifest+json',
         ];
         
         $ext = pathinfo($file, PATHINFO_EXTENSION);
         if (isset($mime_types[$ext])) {
             header('Content-Type: ' . $mime_types[$ext]);
+        } elseif ($uri === '/manifest.json') {
+            header('Content-Type: application/manifest+json');
         }
         
         readfile($file);
