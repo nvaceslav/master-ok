@@ -1,38 +1,77 @@
-import Echo from 'laravel-echo';
-import Pusher from 'pusher-js';
-
-declare global {
-    interface Window {
-        Pusher: typeof Pusher;
-    }
-}
-
-// Добавляем Pusher в глобальную область
-if (typeof window !== 'undefined') {
-    window.Pusher = Pusher;
-}
-
-// Правильная конфигурация Echo
-const echoConfig: any = {
-    broadcaster: 'pusher',
-    key: process.env.REACT_APP_PUSHER_APP_KEY || 'masterok-key',
-    wsHost: process.env.REACT_APP_PUSHER_HOST || '127.0.0.1',
-    wsPort: parseInt(process.env.REACT_APP_PUSHER_PORT || '6001'),
-    wssPort: parseInt(process.env.REACT_APP_PUSHER_PORT || '6001'),
-    forceTLS: false,
-    encrypted: false,
-    disableStats: true,
-    enabledTransports: ['ws', 'wss'],
-    authEndpoint: `${process.env.REACT_APP_API_URL || 'http://localhost:8000/api'}/broadcasting/auth`,
-    auth: {
-        headers: {
-            Authorization: `Bearer ${localStorage.getItem('masterok_token')}`,
-            Accept: 'application/json',
+// ВРЕМЕННАЯ заглушка для Echo - отключаем WebSocket на Railway
+const echo = {
+    channel: (name: string) => ({
+        listen: (event: string, callback: Function) => {
+            console.log(`[Echo Stub] Listening to ${name}.${event}`);
+            return { stop: () => {} };
+        },
+        listenForWhisper: (event: string, callback: Function) => {
+            console.log(`[Echo Stub] Whisper listening to ${name}.${event}`);
+            return { stop: () => {} };
+        },
+        stopListening: (event?: string, callback?: Function) => {
+            console.log(`[Echo Stub] Stopped listening to ${name}.${event}`);
+        },
+        notification: (callback: Function) => {
+            console.log(`[Echo Stub] Notification on ${name}`);
+            return { stop: () => {} };
+        },
+        whisper: (event: string, data: any) => {
+            console.log(`[Echo Stub] Whispering ${event} on ${name}`, data);
+        },
+    }),
+    private: (name: string) => ({
+        listen: (event: string, callback: Function) => {
+            console.log(`[Echo Stub] Private listening to ${name}.${event}`);
+            return { stop: () => {} };
+        },
+        listenForWhisper: (event: string, callback: Function) => {
+            console.log(`[Echo Stub] Private whisper listening to ${name}.${event}`);
+            return { stop: () => {} };
+        },
+        stopListening: (event?: string, callback?: Function) => {
+            console.log(`[Echo Stub] Stopped private listening to ${name}.${event}`);
+        },
+        whisper: (event: string, data: any) => {
+            console.log(`[Echo Stub] Private whispering ${event} on ${name}`, data);
+        },
+    }),
+    join: (name: string) => ({
+        here: (callback: Function) => {
+            console.log(`[Echo Stub] Joined ${name}`);
+            if (callback) callback([]);
+            return this;
+        },
+        joining: (callback: Function) => {
+            console.log(`[Echo Stub] Joining ${name}`);
+            if (callback) callback({ id: 1, name: 'Test User' });
+            return this;
+        },
+        leaving: (callback: Function) => {
+            console.log(`[Echo Stub] Leaving ${name}`);
+            if (callback) callback({ id: 1, name: 'Test User' });
+            return this;
+        },
+        listen: (event: string, callback: Function) => {
+            console.log(`[Echo Stub] Presence listening to ${name}.${event}`);
+            return { stop: () => {} };
+        },
+    }),
+    leave: (channel: string) => {
+        console.log(`[Echo Stub] Left ${channel}`);
+    },
+    socketId: () => 'stub-socket-id-123',
+    disconnect: () => {
+        console.log('[Echo Stub] Disconnected');
+    },
+    connector: {
+        pusher: {
+            connection: {
+                bind: () => {},
+                unbind: () => {},
+            },
         },
     },
-    cluster: process.env.REACT_APP_PUSHER_APP_CLUSTER || 'mt1',
 };
-
-const echo = new Echo(echoConfig);
 
 export default echo;

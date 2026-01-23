@@ -2,9 +2,7 @@ import axios from 'axios';
 
 // Конфигурация axios
 const api = axios.create({
-    baseURL: process.env.REACT_APP_API_URL || 'https://master-ok-production.up.railway.app/api',
-    // или если не работает:
-    // baseURL: 'https://master-ok-production.up.railway.app/api',
+    baseURL: 'https://master-ok-production.up.railway.app/api', // ← ТАК!
     headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
