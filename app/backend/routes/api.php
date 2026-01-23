@@ -11,13 +11,26 @@ use App\Http\Controllers\Api\NotificationController;
 
 // ПУБЛИЧНЫЕ МАРШРУТЫ АУТЕНТИФИКАЦИИ (без авторизации)
 Route::prefix('auth')->group(function () {
-    // Отправка кода на телефон
+    // =========== СУЩЕСТВУЮЩИЕ МАРШРУТЫ (для совместимости) ===========
     Route::post('/send-login-code', [AuthController::class, 'sendLoginCode']);
     Route::post('/send-register-code', [AuthController::class, 'sendRegisterCode']);
-    
-    // Верификация кода
     Route::post('/verify-login', [AuthController::class, 'verifyLogin']);
     Route::post('/verify-register', [AuthController::class, 'verifyRegister']);
+    
+    // =========== НОВЫЕ МАРШРУТЫ ДЛЯ ФРОНТЕНДА ===========
+    // То же самое, но с другим URL (что ожидает фронтенд)
+    Route::post('/login/send-code', [AuthController::class, 'sendLoginCode']);
+    Route::post('/login/verify', [AuthController::class, 'verifyLogin']);
+    Route::post('/register/send-code', [AuthController::class, 'sendRegisterCode']);
+    Route::post('/register/verify', [AuthController::class, 'verifyRegister']);
+    
+    // =========== ДОПОЛНИТЕЛЬНЫЕ МЕТОДЫ ИЗ AuthController ===========
+    // У тебя есть эти методы в AuthController - подключим их тоже
+    Route::post('/register/send-code-alt', [AuthController::class, 'sendRegistrationCode']);
+    Route::post('/register/verify-alt', [AuthController::class, 'verifyRegistration']);
+    
+    // Повторная отправка кода
+    Route::post('/resend-code', [AuthController::class, 'resendCode']);
     
     // Выход
     Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
