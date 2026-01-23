@@ -1,9 +1,9 @@
 <?php
 
 return [
-    'paths' => ['api/*', 'sanctum/csrf-cookie', 'login', 'register'],
+    'paths' => ['api/*', 'sanctum/csrf-cookie', 'login', 'register', 'logout'],
     'allowed_methods' => ['*'],
-    'allowed_origins' => ['http://localhost:3000', 'http://localhost:8000'],
+    'allowed_origins' => ['*'], // Разрешаем все для Railway
     'allowed_origins_patterns' => [],
     'allowed_headers' => ['*'],
     'exposed_headers' => [],

@@ -38,15 +38,7 @@ class AuthController extends Controller
             ], 422);
         }
 
-        // Проверяем, можно ли отправить SMS снова
-        if (!Sms::canSendAgain($request->phone)) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Повторный код можно отправить через 1 минуту'
-            ], 429);
-        }
-
-        // Отправляем SMS
+        // Отправляем SMS (использует ваш SmsService который всегда генерирует 1111)
         $result = Sms::sendVerificationCode($request->phone);
 
         if (!$result['success']) {
@@ -63,8 +55,8 @@ class AuthController extends Controller
             'success' => true,
             'message' => 'Код отправлен на номер телефона',
             'phone' => $request->phone,
-            // В продакшене удалить - только для разработки
-            'debug_code' => env('APP_DEBUG') ? $result['debug_code'] ?? null : null
+            // Для разработки показываем код
+            'debug_code' => '1111' // Всегда 1111
         ]);
     }
 
@@ -87,11 +79,11 @@ class AuthController extends Controller
             ], 422);
         }
 
-        // Проверяем код
+        // Проверяем код через ваш SmsService (который всегда принимает 1111)
         if (!Sms::verifyCode($request->phone, $request->code)) {
             return response()->json([
                 'success' => false,
-                'message' => 'Неверный код подтверждения'
+                'message' => 'Неверный код подтверждения. Используйте код 1111'
             ], 400);
         }
 
@@ -148,15 +140,7 @@ class AuthController extends Controller
             ], 422);
         }
 
-        // Проверяем, можно ли отправить SMS снова
-        if (!Sms::canSendAgain($request->phone)) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Повторный код можно отправить через 1 минуту'
-            ], 429);
-        }
-
-        // Отправляем SMS
+        // Отправляем SMS (использует ваш SmsService который всегда генерирует 1111)
         $result = Sms::sendVerificationCode($request->phone);
 
         if (!$result['success']) {
@@ -170,8 +154,8 @@ class AuthController extends Controller
             'success' => true,
             'message' => 'Код отправлен на номер телефона',
             'phone' => $request->phone,
-            // В продакшене удалить - только для разработки
-            'debug_code' => env('APP_DEBUG') ? $result['debug_code'] ?? null : null
+            // Для разработки показываем код
+            'debug_code' => '1111' // Всегда 1111
         ]);
     }
 
@@ -192,11 +176,11 @@ class AuthController extends Controller
             ], 422);
         }
 
-        // Проверяем код
+        // Проверяем код через ваш SmsService (который всегда принимает 1111)
         if (!Sms::verifyCode($request->phone, $request->code)) {
             return response()->json([
                 'success' => false,
-                'message' => 'Неверный код подтверждения'
+                'message' => 'Неверный код подтверждения. Используйте код 1111'
             ], 400);
         }
 
@@ -252,7 +236,7 @@ class AuthController extends Controller
             ], 422);
         }
 
-        // Проверяем, существует ли пользователь (для регистрации не должен существовать)
+        // Проверяем, существует ли пользователь
         if ($request->type === 'register') {
             $userExists = User::where('phone', $request->phone)->exists();
             if ($userExists) {
@@ -271,14 +255,6 @@ class AuthController extends Controller
             }
         }
 
-        // Проверяем, можно ли отправить SMS снова
-        if (!Sms::canSendAgain($request->phone)) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Повторный код можно отправить через 1 минуту'
-            ], 429);
-        }
-
         // Отправляем SMS
         $result = Sms::sendVerificationCode($request->phone);
 
@@ -293,8 +269,8 @@ class AuthController extends Controller
             'success' => true,
             'message' => 'Новый код отправлен',
             'phone' => $request->phone,
-            // В продакшене удалить
-            'debug_code' => env('APP_DEBUG') ? $result['debug_code'] ?? null : null
+            // Для разработки
+            'debug_code' => '1111' // Всегда 1111
         ]);
     }
 
@@ -361,14 +337,6 @@ class AuthController extends Controller
             ], 422);
         }
 
-        // Проверяем, можно ли отправить SMS снова
-        if (!Sms::canSendAgain($request->phone)) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Повторный код можно отправить через 1 минуту'
-            ], 429);
-        }
-
         // Отправляем SMS
         $result = Sms::sendVerificationCode($request->phone);
 
@@ -386,6 +354,7 @@ class AuthController extends Controller
             'success' => true,
             'message' => 'Код отправлен на номер телефона',
             'phone' => $request->phone,
+            'debug_code' => '1111' // Всегда 1111
         ]);
     }
 
@@ -408,11 +377,11 @@ class AuthController extends Controller
             ], 422);
         }
 
-        // Проверяем код
+        // Проверяем код (ваш SmsService всегда принимает 1111)
         if (!Sms::verifyCode($request->phone, $request->code)) {
             return response()->json([
                 'success' => false,
-                'message' => 'Неверный код подтверждения'
+                'message' => 'Неверный код подтверждения. Используйте код 1111'
             ], 400);
         }
 
